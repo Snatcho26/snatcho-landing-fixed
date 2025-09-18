@@ -1,4 +1,5 @@
 'use client'
+
 import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
@@ -15,17 +16,38 @@ export default function Home() {
   const subscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("Saving...");
+
+    // Save subscriber to Supabase
     const { error } = await supabase.from("waitlist").insert({
       email,
       name,
       source: "landing_v1",
       consent: true,
     });
+
     if (error) {
       setStatus("Error: " + error.message);
-    } else {
-      setStatus("Thanks — you're on the list!");
-      setEmail(""); setName("");
+      return;
+    }
+
+    try {
+      // Send welcome email via your Next.js API
+      const res = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send email");
+      }
+
+      setStatus("Thanks — you're on the list! A welcome email is on its way 🎉");
+      setEmail("");
+      setName("");
+    } catch (err) {
+      setStatus("Saved! But failed to send email. We'll fix it soon.");
+      console.error(err);
     }
   };
 
@@ -42,7 +64,7 @@ export default function Home() {
           className="w-full mb-3 p-3 rounded border border-gray-300"
           placeholder="Your name"
           value={name}
-          onChange={e=>setName(e.target.value)}
+          onChange={e => setName(e.target.value)}
         />
         <input
           className="w-full mb-3 p-3 rounded border border-gray-300"
@@ -50,7 +72,7 @@ export default function Home() {
           required
           value={email}
           type="email"
-          onChange={e=>setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
         />
         <div className="flex items-center mb-4 text-sm text-gray-600">
           <input id="consent" type="checkbox" defaultChecked className="mr-2" />
