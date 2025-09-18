@@ -1,8 +1,8 @@
-'use client'
-
+'use client';
 import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+// Supabase setup
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -13,11 +13,12 @@ export default function Home() {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<string | null>(null);
 
+  // ✅ Updated subscribe function
   const subscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("Saving...");
 
-    // Save subscriber to Supabase
+    // Step 1: Save in Supabase
     const { error } = await supabase.from("waitlist").insert({
       email,
       name,
@@ -30,8 +31,8 @@ export default function Home() {
       return;
     }
 
+    // Step 2: Call API to send welcome email
     try {
-      // Send welcome email via your Next.js API
       const res = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,4 +90,3 @@ export default function Home() {
     </main>
   );
 }
-
